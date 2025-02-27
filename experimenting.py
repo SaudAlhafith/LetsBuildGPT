@@ -68,7 +68,8 @@ def estimate_loss(tqdm = None):
     
     if tqdm is not None:
         tqdm.write('Estimating loss')
-    # print('Estimating loss\r', end="")
+    else:
+        print('Estimating loss\r', end="")
     out = {}
     model.eval()
     for split in ['train', 'val']:
@@ -80,11 +81,12 @@ def estimate_loss(tqdm = None):
 
             if tqdm is not None:
                 tqdm.write(f"{split} Estimation: {(k/eval_iters * 100):.2f}% done\r")
-            # print(f"{split} Estimation: {(k/eval_iters * 100):.2f}% done\r", end="")
+            else:
+                print(f"{split} Estimation: {(k/eval_iters * 100):.2f}% done\r", end="")
 
         out[split] = losses.mean()
     model.train()
-    # print('\r', end="")
+    print('\r', end="")
     return out
 
 # Head Attention Layer
@@ -234,7 +236,7 @@ with tqdm(total=max_iters, desc="Training", unit='iter') as pbar:
     for iter in range(max_iters):
 
         if iter % eval_interval == 0 or iter == max_iters - 1:
-            losses = estimate_loss(tqdm)
+            losses = estimate_loss()
             tqdm.write(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
 
         x, y = get_batch('train')
