@@ -64,8 +64,10 @@ def get_batch(split):
     return x.to(device), y.to(device)
 
 @torch.no_grad()
-def estimate_loss():
+def estimate_loss(tqdm = None):
     
+    if tqdm is not None:
+        tqdm.write('Estimating loss')
     # print('Estimating loss\r', end="")
     out = {}
     model.eval()
@@ -76,6 +78,8 @@ def estimate_loss():
             logits, loss = model(X, Y)
             losses[k] = loss
 
+            if tqdm is not None:
+                tqdm.write(f"{split} Estimation: {(k/eval_iters * 100):.2f}% done\r")
             # print(f"{split} Estimation: {(k/eval_iters * 100):.2f}% done\r", end="")
 
         out[split] = losses.mean()
