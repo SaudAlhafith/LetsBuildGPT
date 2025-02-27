@@ -1,3 +1,4 @@
-.txt
-.pth
-.json
+*.txt
+*.pth
+*.json
+ipynb_checkpoints/
