@@ -6,7 +6,7 @@ from torch.nn import functional as F
 import torch.optim.adam
 
 # hyperparameters
-batch_size = 32
+batch_size = 256
 block_size = 512 # context length
 max_iters = 5000
 eval_interval = 1000
