@@ -234,7 +234,7 @@ with tqdm(total=max_iters, desc="Training", unit='iter') as pbar:
     for iter in range(max_iters):
 
         if iter % eval_interval == 0 or iter == max_iters - 1:
-            losses = estimate_loss()
+            losses = estimate_loss(tqdm)
             tqdm.write(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
 
         x, y = get_batch('train')
