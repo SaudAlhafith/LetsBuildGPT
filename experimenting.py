@@ -239,8 +239,6 @@ num_parameters = sum(p.nelement() for p in model.parameters())
 print(f"Parameters: {num_parameters}")
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-losses = estimate_loss()
-# print(f"step {0}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
 
 with tqdm(total=max_iters, desc="Training", unit='iter') as pbar:
     for iter in range(max_iters+1):
