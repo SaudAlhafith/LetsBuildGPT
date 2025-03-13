@@ -4,10 +4,12 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 import torch.optim.adam
+import pickle
+import tiktoken
 
 # hyperparameters
-batch_size = 256
-block_size = 512 # context length
+batch_size = 32
+block_size = 256 # context length
 max_iters = 5000
 eval_interval = 1000
 learning_rate = 3e-4
@@ -26,17 +28,8 @@ print(f"Model parameter size: {param_size:.2f} GB")
 
 torch.manual_seed(1337)
 
-with open('amazing.txt', 'r', encoding='utf-8') as f:
+with open('input.txt', 'r', encoding='utf-8') as f:
     text = f.read()
-# with open('chunk10000_2010000.txt', 'r', encoding='utf-8') as f:
-#     text = f.read()
-
-# Load existance vocab
-# stoi, itos = json.load(open(f"{"AR_model"}.json", 'r', encoding='utf-8')).values()
-# encode = lambda s: [stoi[c] for c in s]
-# decode = lambda l: ''.join([itos[str(c)] for c in l])
-# vocab_size = len(stoi)
-# print(f"Vocab loaded from {"AR_model"}.json")
 
 # here are all the unique characters that occur in this text 
 chars = sorted(list(set(text)))
@@ -49,8 +42,17 @@ decode = lambda l: ''.join([itos[c] for c in l])
 print(f"data: {len(text)}")
 print(f"vocab: {vocab_size}")
 
+data = []
+# load encoded data using gpt-4o tokenizer
+with open("amazing.pkl", "rb") as f:
+    data = pickle.load(f)
+
+enc = tiktoken.encoding_for_model("gpt-4o") 
+
+# Get vocabulary size
+vocab_size = enc.n_vocab
 # Train and test splits
-data = torch.tensor(encode(text), dtype=torch.long)
+data = torch.tensor(data, dtype=torch.long)
 n = int(0.9*len(data))
 train_data = data[:n]
 val_data = data[n:]
@@ -250,7 +252,7 @@ with tqdm(total=max_iters, desc="Training", unit='iter') as pbar:
         pbar.update(1)
 
 # Save model parameters & vocab
-model_save_path = 'AR_model_12l_12h'
+model_save_path = 'AR_model_withTiktoken'
 torch.save(model.state_dict(), f"{model_save_path}.pth")
 # with open(f"{model_save_path}.json", 'w', encoding='utf-8') as f:
 #     json.dump({'stoi': stoi, 'itos': itos}, f, ensure_ascii=False, indent=4)
@@ -282,8 +284,8 @@ while True:
     if prompt.lower() == 'e':
         exit()
     else:
-        prompt_encoded = torch.tensor([encode(prompt)], device=device)
-        answer = decode(m.generate(prompt_encoded, max_new_tokens=100)[0].tolist())
+        prompt_encoded = torch.tensor([enc.encode(prompt)], device=device)
+        answer = enc.decode(m.generate(prompt_encoded, max_new_tokens=100)[0].tolist())
         f = open("outputs.txt", "a", encoding="utf-8")
         f.write(f"{prompt}:\n {answer}\n")
         f.close()

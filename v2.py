@@ -83,7 +83,7 @@ class Head(nn.Module):
         q = self.query(x) # (B, T, H)
 
         wei = q @ k.transpose(-2, -1) * C**-0.5 # (B, T, T) FAccccckkkk why dividing when you have put negative power ???????????
-        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf')) # (B, T, T)
+        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf')) # (B, T, T), we trim until T because sometimes the T is not the block_size.
         wei = F.softmax(wei, dim=-1) # (B, T, T)
         wei = self.dropout(wei)
 
@@ -100,8 +100,8 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        out = torch.cat([h(x) for h in self.heads], dim=-1)
-        out = self.proj(out)
+        out = torch.cat([h(x) for h in self.heads], dim=-1) # (B, T, H * num_heads) H * num_heads = n_embd
+        out = self.proj(out) # (B, T, C) @ (C, C) = (B, T, C)
         out = self.dropout(out)
         return out
 
@@ -139,7 +139,7 @@ class Block(nn.Module):
 
 
 # super simple bigram model
-class BigramLanguageModel(nn.Module):
+class GPTLanguageModel(nn.Module):
 
     def __init__(self):
         super().__init__()
@@ -188,7 +188,7 @@ class BigramLanguageModel(nn.Module):
 
 
 # -------------- Training --------------
-model = BigramLanguageModel()
+model = GPTLanguageModel()
 m = model.to(device)
 
 num_parameters = sum(p.nelement() for p in model.parameters())

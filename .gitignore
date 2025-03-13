@@ -1,4 +1,5 @@
 *.txt
+*.pkl
 *.pth
 *.json
 ipynb_checkpoints/
