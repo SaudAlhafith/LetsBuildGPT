@@ -7,19 +7,30 @@ import torch.optim.adam
 import pickle
 import tiktoken
 
-# hyperparameters
-batch_size = 32
+# # hyperparameters pc
+# batch_size = 32
+# block_size = 256 # context length
+# max_iters = 5000
+# eval_interval = 1000
+# learning_rate = 3e-4
+# device = 'cuda' if torch.cuda.is_available() else 'cpu'
+# eval_iters = 100
+# n_embd = 384
+# n_head = 8
+# n_layer = 8
+# dropout = 0.2
+# # hyperparameters
+batch_size = 64
 block_size = 256 # context length
-max_iters = 5000
+max_iters = 10000
 eval_interval = 1000
 learning_rate = 3e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 eval_iters = 100
 n_embd = 384
-n_head = 8
-n_layer = 8
+n_head = 12
+n_layer = 12
 dropout = 0.2
-
 # B * T * C * L * 2 * 4 / (1024 ** 3)
 param_size = batch_size * block_size * n_embd * n_layer * n_head * 2 * 4 / (1024 ** 3) # Not accurate
 print(f"Model parameter size: {param_size:.2f} GB")
@@ -48,9 +59,9 @@ with open("amazing.pkl", "rb") as f:
     data = pickle.load(f)
 
 enc = tiktoken.encoding_for_model("gpt-4o") 
-
 # Get vocabulary size
 vocab_size = enc.n_vocab
+
 # Train and test splits
 data = torch.tensor(data, dtype=torch.long)
 n = int(0.9*len(data))
@@ -218,11 +229,8 @@ model = BigramLanguageModel()
 m = model.to(device)
 
 # Restore model state
-# model_save_path = 'AR_model'
-
-# model = BigramLanguageModel()
-# m = model.to(device)
-# model.load_state_dict(torch.load(f"{model_save_path}.pth", weights_only=True))
+model_save_path = 'AR_model_withTiktoken'
+model.load_state_dict(torch.load(f"{model_save_path}.pth", weights_only=True))
 # model.eval()
 # print(f"Model parameters loaded from {model_save_path}")
 
@@ -231,15 +239,19 @@ num_parameters = sum(p.nelement() for p in model.parameters())
 print(f"Parameters: {num_parameters}")
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-# losses = estimate_loss()
+losses = estimate_loss()
 # print(f"step {0}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
 
 with tqdm(total=max_iters, desc="Training", unit='iter') as pbar:
-    for iter in range(max_iters):
+    for iter in range(max_iters+1):
 
         if iter % eval_interval == 0 or iter == max_iters - 1:
             losses = estimate_loss()
             tqdm.write(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+        if iter % 5000 == 0 and iter != 0:
+            model_save_path = f"AR_model_withTiktoken+{iter}"
+            torch.save(model.state_dict(), f"{model_save_path}.pth")
+            tqdm.write(f"Model parameters saved to {model_save_path}.pth")
 
         x, y = get_batch('train')
 
@@ -250,13 +262,13 @@ with tqdm(total=max_iters, desc="Training", unit='iter') as pbar:
 
         pbar.set_description(f"Loss: {loss.item():.4f}")
         pbar.update(1)
-
+print("Training complete.")
 # Save model parameters & vocab
-model_save_path = 'AR_model_withTiktoken'
-torch.save(model.state_dict(), f"{model_save_path}.pth")
+# model_save_path = 'AR_model_withTiktoken'
+# torch.save(model.state_dict(), f"{model_save_path}.pth")
 # with open(f"{model_save_path}.json", 'w', encoding='utf-8') as f:
 #     json.dump({'stoi': stoi, 'itos': itos}, f, ensure_ascii=False, indent=4)
-print(f"Model parameters saved to {model_save_path}.pth")
+# print(f"Model parameters saved to {model_save_path}.pth")
 # print(f"Vocab saved to {model_save_path}.json")
 
 # Load model
@@ -278,14 +290,14 @@ print(f"Model parameters saved to {model_save_path}.pth")
 
 # -------------- prompting --------------
 
-while True:
-    prompt = input("Type the start of something or (E) to exit:\n")
+# while True:
+#     prompt = input("Type the start of something or (E) to exit:\n")
 
-    if prompt.lower() == 'e':
-        exit()
-    else:
-        prompt_encoded = torch.tensor([enc.encode(prompt)], device=device)
-        answer = enc.decode(m.generate(prompt_encoded, max_new_tokens=100)[0].tolist())
-        f = open("outputs.txt", "a", encoding="utf-8")
-        f.write(f"{prompt}:\n {answer}\n")
-        f.close()
+#     if prompt.lower() == 'e':
+#         exit()
+#     else:
+#         prompt_encoded = torch.tensor([enc.encode(prompt)], device=device)
+#         answer = enc.decode(m.generate(prompt_encoded, max_new_tokens=100)[0].tolist())
+#         f = open("outputs.txt", "a", encoding="utf-8")
+#         f.write(f"{prompt}:\n {answer}\n")
+#         f.close()
