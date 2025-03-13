@@ -229,8 +229,8 @@ model = BigramLanguageModel()
 m = model.to(device)
 
 # Restore model state
-# model_save_path = 'AR_model_withTiktoken'
-# model.load_state_dict(torch.load(f"{model_save_path}.pth", weights_only=True))
+model_save_path = 'AR_model_withTiktoken8_8'
+model.load_state_dict(torch.load(f"{model_save_path}.pth", weights_only=True))
 # model.eval()
 # print(f"Model parameters loaded from {model_save_path}")
 
@@ -264,7 +264,7 @@ with tqdm(total=max_iters, desc="Training", unit='iter') as pbar:
         pbar.update(1)
 print("Training complete.")
 # Save model parameters & vocab
-model_save_path = 'AR_model_withTiktoken8_8'
+model_save_path = 'AR_model_withTiktoken8_8+2'
 torch.save(model.state_dict(), f"{model_save_path}.pth")
 # with open(f"{model_save_path}.json", 'w', encoding='utf-8') as f:
 #     json.dump({'stoi': stoi, 'itos': itos}, f, ensure_ascii=False, indent=4)
