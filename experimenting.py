@@ -22,14 +22,14 @@ import tiktoken
 # # hyperparameters
 batch_size = 64
 block_size = 256 # context length
-max_iters = 10000
+max_iters = 5000
 eval_interval = 1000
 learning_rate = 3e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 eval_iters = 100
 n_embd = 384
-n_head = 12
-n_layer = 12
+n_head = 8
+n_layer = 8
 dropout = 0.2
 # B * T * C * L * 2 * 4 / (1024 ** 3)
 param_size = batch_size * block_size * n_embd * n_layer * n_head * 2 * 4 / (1024 ** 3) # Not accurate
@@ -229,8 +229,8 @@ model = BigramLanguageModel()
 m = model.to(device)
 
 # Restore model state
-model_save_path = 'AR_model_withTiktoken'
-model.load_state_dict(torch.load(f"{model_save_path}.pth", weights_only=True))
+# model_save_path = 'AR_model_withTiktoken'
+# model.load_state_dict(torch.load(f"{model_save_path}.pth", weights_only=True))
 # model.eval()
 # print(f"Model parameters loaded from {model_save_path}")
 
@@ -248,10 +248,10 @@ with tqdm(total=max_iters, desc="Training", unit='iter') as pbar:
         if iter % eval_interval == 0 or iter == max_iters - 1:
             losses = estimate_loss()
             tqdm.write(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
-        if iter % 5000 == 0 and iter != 0:
-            model_save_path = f"AR_model_withTiktoken+{iter}"
-            torch.save(model.state_dict(), f"{model_save_path}.pth")
-            tqdm.write(f"Model parameters saved to {model_save_path}.pth")
+        # if iter % 5000 == 0 and iter != 0:
+        #     model_save_path = f"AR_model_withTiktoken+{iter}"
+        #     torch.save(model.state_dict(), f"{model_save_path}.pth")
+        #     tqdm.write(f"Model parameters saved to {model_save_path}.pth")
 
         x, y = get_batch('train')
 
@@ -264,8 +264,8 @@ with tqdm(total=max_iters, desc="Training", unit='iter') as pbar:
         pbar.update(1)
 print("Training complete.")
 # Save model parameters & vocab
-# model_save_path = 'AR_model_withTiktoken'
-# torch.save(model.state_dict(), f"{model_save_path}.pth")
+model_save_path = 'AR_model_withTiktoken8_8'
+torch.save(model.state_dict(), f"{model_save_path}.pth")
 # with open(f"{model_save_path}.json", 'w', encoding='utf-8') as f:
 #     json.dump({'stoi': stoi, 'itos': itos}, f, ensure_ascii=False, indent=4)
 # print(f"Model parameters saved to {model_save_path}.pth")
